@@ -237,53 +237,107 @@ function line(name, points, extra = {}) {
   };
 }
 
+const AIRBANK_TRIGGER_BP = 15;
+function daysBetween(from, to) {
+  return Math.round((new Date(to + "T00:00:00Z") - new Date(from + "T00:00:00Z")) / 86400000);
+}
+function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+function analyzeAirbank() {
+  const rows = (state.airChanges || []).filter((row) => num(row.new_rate) != null);
+  const events = rows.map((row, index) => {
+    const previous = [...rows.slice(0, index)].reverse().find((item) => item.direction === "up" || item.direction === "down");
+    const direction = row.direction === "up" || row.direction === "down" ? row.direction : null;
+    const continuous = previous && num(row.old_rate) != null && Math.abs(num(row.old_rate) - num(previous.new_rate)) < 0.001;
+    let trigger = null;
+    let baseIrs = null;
+    if (direction && previous) {
+      const start = onOrBefore(state.irs3, previous.effective_date);
+      if (start) {
+        baseIrs = start.value;
+        for (const point of state.irs3) {
+          if (point.date <= previous.effective_date || point.date > row.effective_date) continue;
+          if (Math.abs(point.value - start.value) >= AIRBANK_TRIGGER_BP / 100) {
+            trigger = { date: point.date, irs: point.value, base: start.value, moveBp: (point.value - start.value) * 100 };
+            break;
+          }
+        }
+      }
+    }
+    const irsAtChange = onOrBefore(state.irs3, row.effective_date);
+    const margin = irsAtChange ? (num(row.new_rate) - irsAtChange.value) * 100 : null;
+    const lag = trigger ? daysBetween(trigger.date, row.effective_date) : null;
+    const irsMoveBp = baseIrs != null && irsAtChange ? (irsAtChange.value - baseIrs) * 100 : null;
+    return { ...row, direction, continuous, trigger, irsAtChange, margin, lag, irsMoveBp };
+  });
+  const usable = events.filter((event) => event.continuous && event.lag != null);
+  const lastLevel = rows[rows.length - 1];
+  const irsNow = state.irs3[state.irs3.length - 1];
+  return {
+    events,
+    usable,
+    medianLag: median(usable.map((event) => event.lag)),
+    lagMin: usable.length ? Math.min(...usable.map((event) => event.lag)) : null,
+    lagMax: usable.length ? Math.max(...usable.map((event) => event.lag)) : null,
+    medianTriggerMove: median(usable.map((event) => Math.abs(event.irsMoveBp))),
+    medianMargin: median(events.filter((event) => event.margin != null && event.direction).map((event) => event.margin)),
+    sinceLastBp: irsNow && lastLevel ? ((() => { const at = onOrBefore(state.irs3, lastLevel.effective_date); return at ? (irsNow.value - at.value) * 100 : null; })()) : null,
+    currentMargin: irsNow && lastLevel ? (num(lastLevel.new_rate) - irsNow.value) * 100 : null,
+    lastLevel,
+  };
+}
 function renderMain() {
   const el = document.getElementById("chart-main");
   const last = state.irs3[state.irs3.length - 1];
   if (!last || !window.echarts) { el.textContent = "Graf se nepodařilo vykreslit."; return; }
   const from = cutoff(last.date, state.range);
   const irs = state.irs3.filter((point) => point.date >= from);
-  const before = inForce(state.air, from);
-  const air = state.air.filter((point) => point.date >= from);
+  const analysis = analyzeAirbank();
+  const verified = analysis.events.filter((event) => num(event.new_rate) != null).map((event) => ({ date: event.effective_date, value: num(event.new_rate) }));
+  const before = inForce(verified, from);
+  const air = verified.filter((point) => point.date >= from);
   if (before && (!air.length || air[0].date !== before.date)) air.unshift(before);
   if (air.length) air.push({ date: last.date, value: air[air.length - 1].value });
+  const markers = [
+    { yAxis: state.rb || 5.45, label: { formatter: "RB 5,45 %", color: "#6d645b", position: "insideEndTop" }, lineStyle: { type: "dashed", color: "#6d645b" } },
+  ];
+  for (const event of analysis.events) {
+    if (event.effective_date < from) continue;
+    if (event.direction) {
+      markers.push({
+        xAxis: event.effective_date,
+        label: { formatter: (event.direction === "up" ? "↑ " : "↓ ") + pct(num(event.new_rate)), color: event.direction === "up" ? "#b24a2c" : "#1b7a46", fontSize: 11, position: "insideEndTop" },
+        lineStyle: { type: "solid", color: event.direction === "up" ? "#b24a2c" : "#1b7a46", width: 1.4 },
+      });
+    } else {
+      markers.push({
+        xAxis: event.effective_date,
+        label: { formatter: pct(num(event.new_rate)), color: "#6d645b", fontSize: 11, position: "insideEndTop" },
+        lineStyle: { type: "solid", color: "#6d645b", width: 1 },
+      });
+    }
+    if (event.trigger && event.trigger.date >= from) {
+      markers.push({
+        xAxis: event.trigger.date,
+        label: { formatter: "trigger " + nf.format(event.trigger.irs), fontSize: 10, color: "#6d645b", position: "insideStartBottom" },
+        lineStyle: { type: "dotted", color: "#8a7a68", width: 1.2 },
+      });
+    }
+  }
   const series = [
     line("3Y IRS", irs, {
       color: "#173848",
       lineStyle: { width: 2.4 },
-      markArea: {
-        silent: true,
-        itemStyle: { color: "rgba(178, 74, 44, 0.12)" },
-        label: { color: "#8a3b24", fontSize: 11 },
-        data: [[{ yAxis: 5.1, name: "pásmo, kde Air Bank pravděpodobně zdraží" }, { yAxis: 5.2 }]],
-      },
-      markLine: {
-        silent: true,
-        symbol: "none",
-        lineStyle: { type: "dashed", color: "#6d645b" },
-        label: { formatter: "Raiffeisenbank 5,45 %", color: "#6d645b" },
-        data: [{ yAxis: 5.45 }],
-      },
+      markLine: { silent: true, symbol: "none", data: markers },
     }),
-    line("Air Bank 3Y", air, {
+    line("Air Bank 3Y s pojištěním", air, {
       color: "#b24a2c",
       step: "end",
       lineStyle: { width: 2 },
-      markPoint: {
-        symbol: "circle",
-        symbolSize: 8,
-        itemStyle: { color: "#b24a2c" },
-        label: {
-          formatter: (item) => {
-            const date = item.data && item.data.date;
-            if (!date) return "";
-            return Number(date.slice(8)) + ". " + Number(date.slice(5, 7)) + ".";
-          },
-          fontSize: 10,
-          color: "#6d645b",
-        },
-        data: state.air.filter((point) => point.date >= from && point.date <= last.date).map((point) => ({ coord: [point.date, point.value], date: point.date, value: point.value })),
-      },
     }),
   ];
   if (document.getElementById("show-1y").checked) series.push(line("1Y IRS", state.irs1.filter((p) => p.date >= from), { color: "#0e6a60" }));
@@ -316,6 +370,27 @@ function renderMain() {
     series,
   }, true);
   if (!charts.includes(chart)) charts.push(chart);
+  renderAirbankEvents(analysis);
+}
+function renderAirbankEvents(analysis) {
+  const body = document.querySelector("#airbank-events tbody");
+  const summary = document.getElementById("airbank-summary");
+  if (!body || !summary) return;
+  body.innerHTML = analysis.events.map((event) => `<tr>
+    <td>${esc(event.effective_date.split("-").reverse().join(". "))}</td>
+    <td class="num">${num(event.old_rate) == null ? "n/a" : pct(num(event.old_rate))}</td>
+    <td class="num">${pct(num(event.new_rate))}</td>
+    <td>${event.direction === "up" ? "↑" : event.direction === "down" ? "↓" : "n/a"}</td>
+    <td>${event.trigger ? esc(event.trigger.date.split("-").reverse().join(". ")) + " · " + pct(event.trigger.irs, 2) + (event.irsMoveBp == null ? "" : " · do změny " + signed(event.irsMoveBp, " bp", 0)) : "n/a"}</td>
+    <td class="num">${event.lag == null ? "n/a" : event.lag + " dní" + (event.continuous ? "" : ", mimo medián")}</td>
+    <td class="num">${event.irsAtChange ? pct(event.irsAtChange.value, 2) : "n/a"}</td>
+    <td class="num">${event.margin == null ? "n/a" : signed(event.margin, " bp", 0)}</td>
+    <td><a href="${esc(event.source_url)}">${esc(event.source)}</a></td>
+  </tr>`).join("");
+  const marginGap = analysis.medianMargin != null && analysis.currentMargin != null ? analysis.currentMargin - analysis.medianMargin : null;
+  summary.textContent = analysis.usable.length
+    ? `Práh triggeru ${AIRBANK_TRIGGER_BP} bp: první den, kdy se 3Y IRS od hladiny v den předchozí ověřené změny posunul aspoň o ${AIRBANK_TRIGGER_BP} bp. Medián prodlevy ${analysis.medianLag} dní, rozsah ${analysis.lagMin}–${analysis.lagMax} dní, n=${analysis.usable.length}. Do mediánu vstupují jen návazné změny, u kterých práh nastal. Medián velikosti pohybu IRS od předchozí změny do dne změny sazby ${analysis.medianTriggerMove == null ? "n/a" : nf.format(analysis.medianTriggerMove) + " bp"}. Medián marže sazba − IRS ${analysis.medianMargin == null ? "n/a" : nf.format(analysis.medianMargin) + " bp"}. Od poslední ověřené hladiny IRS ${analysis.sinceLastBp == null ? "n/a" : signed(analysis.sinceLastBp, " bp")}. Aktuální marže ${analysis.currentMargin == null ? "n/a" : signed(analysis.currentMargin, " bp")}, rozdíl proti mediánu ${marginGap == null ? "n/a" : signed(marginGap, " bp")}.`
+    : "n/a";
 }
 
 function renderSpread() {
@@ -323,8 +398,9 @@ function renderSpread() {
   const last = state.irs3[state.irs3.length - 1];
   if (!last || !window.echarts) return;
   const from = cutoff(last.date, state.range);
+  const verified = analyzeAirbank().events.filter((event) => num(event.new_rate) != null).map((event) => ({ date: event.effective_date, value: num(event.new_rate) }));
   const points = state.irs3.filter((point) => point.date >= from).map((point) => {
-    const air = inForce(state.air, point.date);
+    const air = inForce(verified, point.date);
     return air ? { date: point.date, value: (air.value - point.value) * 100 } : null;
   }).filter(Boolean);
   const chart = state.spreadChart || echarts.init(el);
@@ -605,10 +681,10 @@ function bind() {
 async function main() {
   document.getElementById("chip-cnb").textContent = chip(daysUntil("2026-12-17"));
   document.getElementById("chip-feb").textContent = chip(daysUntil("2027-02-01"));
-  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText, outlookText, savingsText] = await Promise.all([
+  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText, outlookText, savingsText, changesText] = await Promise.all([
     load("data/meta.json"), load("data/influence.json"), load("data/irs_3y.csv"), load("data/irs_1y.csv"),
     load("data/irs_5y.csv"), load("data/cnb_fx.csv"), load("data/airbank_3y.csv"), load("data/bank_rates.csv"),
-    load("data/cnb_outlook.csv"), load("data/savings_rates.csv"),
+    load("data/cnb_outlook.csv"), load("data/savings_rates.csv"), load("data/airbank_changes.csv"),
   ]);
   state.meta = JSON.parse(metaText);
   state.influence = JSON.parse(influenceText);
@@ -623,6 +699,7 @@ async function main() {
   state.banks = parseCsv(bankText);
   state.outlook = parseCsv(outlookText);
   state.savings = parseCsv(savingsText);
+  state.airChanges = parseCsv(changesText);
   const rb = state.banks.find((row) => /raiffeisen/i.test(row.bank));
   state.rb = rb ? num(rb.rate_pct) : 5.45;
   state.series = {};

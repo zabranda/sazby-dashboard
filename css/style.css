@@ -104,7 +104,8 @@ header.top {
   line-height: 1.15;
   margin: 6px 0 2px;
 }
-.tile .sub { font-size: 0.82rem; color: var(--muted); line-height: 1.35; }
+.tile .sub { font-size: 0.82rem; color: var(--muted); line-height: 1.35; overflow-wrap: anywhere; }
+.hint-inline { overflow-wrap: anywhere; }
 .up { color: var(--terra); }
 .down { color: var(--green); }
 .tone-green { background: #e8f6ee; border-color: #b7e0c6; }
@@ -209,7 +210,10 @@ header.top {
 .mini .plot { height: 120px; }
 .mini .miss { height: 120px; display: grid; place-items: center; color: var(--muted); text-align: center; font-size: 0.85rem; padding: 8px; }
 
-.table-wrap { overflow-x: auto; }
+.panel { min-width: 0; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
+#airbank-events { width: max-content; min-width: 100%; }
+#airbank-events td { max-width: 28rem; }
 table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
