@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sazby — CZK IRS a hypoteční fixace</title>
+  <meta name="description" content="Veřejný přehled korunových úrokových swapů, sazeb hypoték a toho, co jimi hýbe. Žádná osobní data.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23173848' width='32' height='32' rx='6'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='%23f6f1e8' font-size='16' font-family='serif'%3E%25%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,560;8..60,680&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="kicker">Veřejná tržní data</div>
+        <h1>Sazby</h1>
+        <p class="lede">Korunový úrokový swap na 3 roky, ceníky hypoték s tříletou fixací a faktory, které sazbu táhnou. Jen veřejné řady a názvy bank. Žádná jména, smlouvy, částky ani adresy.</p>
+      </div>
+      <div class="chips">
+        <div class="chip"><b id="chip-cnb">—</b><span>zasedání ČNB · 17. 12. 2026</span></div>
+        <div class="chip"><b id="chip-feb">—</b><span>1. února 2027</span></div>
+      </div>
+    </header>
+
+    <section class="tiles" id="tiles" aria-label="Aktuální hodnoty"></section>
+
+    <div class="lead">
+      <section class="panel" id="flow-panel">
+        <h2>Co z toho dělá sazbu hypotéky</h2>
+        <p class="hint">Nejdřív se složí tržní sazba. Banka k ní přidá svou marži a přenese jen část pohybu.</p>
+        <div class="flow-sources">
+          <div class="pill"><strong>Česko</strong><span>repo, inflace, dluhopis, kurz, PRIBOR</span></div>
+          <div class="pill"><strong>Eurozóna</strong><span>ECB, HICP, 2Y eurová sazba</span></div>
+          <div class="pill"><strong>USA</strong><span>Fed, inflace, výnosy 2Y a 10Y</span></div>
+          <div class="pill"><strong>Globální</strong><span>EUR/USD a ropa Brent</span></div>
+        </div>
+        <div class="flow-arrow">tyto faktory se skládají do</div>
+        <div class="flow-box"><strong>3Y CZK IRS</strong><span id="flow-irs">střed nákup/prodej z Patrie</span></div>
+        <div class="flow-arrow">banka k němu přidá spread</div>
+        <div class="flow-box"><strong>Air Bank, fixace 3 roky</strong><span id="flow-spread">ceník = IRS + spread</span></div>
+        <p class="flow-note">Růst IRS se do ceníku promítá asi ze 60–65 % po 3–5 týdnech, v krocích 10–20 bp, jakmile IRS zůstane o 30–40 bp výš. Pokles se promítá pomaleji, asi ze 40 % za 1–4 měsíce. Raiffeisenbank v grafu je čárkovaná hladina 5,45 %.</p>
+      </section>
+      <section class="panel" id="impl-panel">
+        <h2>Co to znamená pro sazbu hypotéky</h2>
+        <p class="hint">Přepočet poslední měsíční změny nejsilnějších čerstvých faktorů přes jejich historickou betu. Hrubý odhad, ne prognóza.</p>
+        <div id="implication"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>3Y CZK IRS a ceník Air Bank</h2>
+      <p class="hint" id="irs-note">Historie do první hodnoty označené jako Patria je přibližný odečet z grafu, tolerance asi ±3 bp.</p>
+      <div class="toolbar">
+        <div id="ranges" role="group" aria-label="Období">
+          <button type="button" data-range="3M">3M</button>
+          <button type="button" data-range="6M">6M</button>
+          <button type="button" data-range="1R">1R</button>
+          <button type="button" data-range="2R" class="active">2R</button>
+          <button type="button" data-range="all">vše</button>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="show-1y"> 1Y IRS</label>
+          <label><input type="checkbox" id="show-5y"> 5Y IRS</label>
+          <label>Překrýt faktor
+            <select id="overlay"><option value="">žádný</option></select>
+          </label>
+        </div>
+      </div>
+      <div id="chart-main" class="chart" role="img" aria-label="Graf 3Y IRS a sazby Air Bank"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Spread Air Bank minus 3Y IRS</h2>
+      <p class="hint">Ceníková sazba bez slev, v bazických bodech. Čára na 40 bp: pod touto hladinou Air Bank v roce 2026 zdražovala.</p>
+      <div id="chart-spread" class="chart short" role="img" aria-label="Graf spreadu Air Bank a IRS"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Jak silně který faktor hýbe 3Y IRS</h2>
+      <p class="hint" id="method-note"></p>
+      <div id="chart-rank" class="chart bar" role="img" aria-label="Korelace faktorů s 3Y IRS"></div>
+      <div class="table-wrap">
+        <table id="rank-table">
+          <thead>
+            <tr>
+              <th>Faktor</th>
+              <th class="num">Korelace</th>
+              <th class="num">R²</th>
+              <th>Přepočet</th>
+              <th class="num">Změna za měsíc</th>
+              <th class="num">→ IRS</th>
+              <th>Verdikt</th>
+              <th>6M</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Co hýbe 3Y CZK IRS</h2>
+      <p class="hint">Každý graf je vlastní řada. Změna je proti hodnotě zhruba před měsícem. Cílové pásmo je jen u inflace.</p>
+      <div id="drivers" class="groups"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ceníky 3leté fixace</h2>
+      <p class="hint">Ručně udržovaný soubor <code>data/bank_rates.csv</code>, seřazený od nejnižší sazby. Rozdíl je proti Raiffeisenbank.</p>
+      <div class="table-wrap">
+        <table id="banks">
+          <thead>
+            <tr>
+              <th>Banka</th>
+              <th class="num">Sazba</th>
+              <th class="num">Oproti Raiffeisenbank</th>
+              <th>Poznámka</th>
+              <th>Platí od</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Metodika a zdroje</h2>
+      <p>Air Bank v roce 2026 posouvala ceník nahoru po zhruba 3–5 týdnech, kdy 3Y IRS zůstalo o 30–40 bp výš, a přenesla asi 60–65 % růstu v krocích 10–20 bp. Pokles přenáší pomaleji, asi ze 40 % za 1–4 měsíce. Pásmo 5,10–5,20 % v hlavním grafu je hladina, nad kterou už Air Bank v této epizodě spíš zdražovala.</p>
+      <p>Vliv faktorů je spočítaný z historických změn, ne z hladin: u tržních řad týdenní změny od ledna 2024, u inflace měsíční změny. Silný vliv znamená absolutní korelaci alespoň 0,45, střední od 0,25, jinak slabý. Měsíční řady mají nižší jistotu, protože bodů je méně. Sazba, která se mění jen v den zasedání, může vyjít statisticky slabá, i když ekonomicky krátký konec křivky drží. Součet příspěvků v odhadu pro hypotéku faktory sčítá, přestože se překrývají. Není to kauzální model.</p>
+      <p>Historie 3Y IRS před první hodnotou staženou z Patrie je přibližná. Denní hodnota IRS je střed nákupu a prodeje, protože Patria v tabulce nezveřejňuje samostatnou závěrku. 1Y a 5Y začínají prvním úspěšně staženým dnem.</p>
+      <ul class="sources">
+        <li><a href="https://www.patria.cz/kurzy/historie/sazby.html">Patria, historie sazeb IRS</a> a <a href="https://www.patria.cz/kurzy/czk/3y/irsdetail.html">detail 3Y</a></li>
+        <li><a href="https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt">ČNB, denní fixing</a></li>
+        <li><a href="https://www.cnb.cz/cs/casto-kladene-dotazy/Jak-se-vyvijela-dvoutydenni-repo-sazba-CNB">ČNB, historie 2T repo sazby</a></li>
+        <li><a href="https://www.cnb.cz/cs/financni-trhy/penezni-trh/pribor/fixing-urokovych-sazeb-na-mezibankovnim-trhu-depozit-pribor/">ČNB, PRIBOR</a></li>
+        <li><a href="https://csu.gov.cz/produkty/isc_cr">ČSÚ, index spotřebitelských cen</a> (meziroční růst úhrnu)</li>
+        <li><a href="https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_manr/default/table?lang=en">Eurostat HICP, prc_hicp_manr</a></li>
+        <li><a href="https://data.ecb.europa.eu/data/datasets/YC/YC.B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y">ECB, 2Y spot sazba AAA křivky</a></li>
+        <li><a href="https://fred.stlouisfed.org/series/ECBDFR">FRED ECBDFR</a> a řada depozitní sazby ECB</li>
+        <li><a href="https://fred.stlouisfed.org/series/DGS2">FRED DGS2</a>, <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>, <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates">US Treasury</a></li>
+        <li><a href="https://fred.stlouisfed.org/series/CPIAUCSL">FRED CPIAUCSL</a> a <a href="https://www.bls.gov/cpi/">BLS CPI-U</a></li>
+        <li><a href="https://fred.stlouisfed.org/series/DFEDTARU">FRED DFEDTARU</a> a <a href="https://www.federalreserve.gov/monetarypolicy/openmarket.htm">Fed, cílová sazba</a></li>
+        <li><a href="https://fred.stlouisfed.org/series/DEXUSEU">FRED DEXUSEU</a> a <a href="https://data.ecb.europa.eu/data/datasets/EXR/EXR.D.USD.EUR.SP00.A">ECB EUR/USD</a></li>
+        <li><a href="https://fred.stlouisfed.org/series/DCOILBRENTEU">FRED DCOILBRENTEU</a> a <a href="https://www.eia.gov/dnav/pet/hist/rbrteD.htm">EIA Brent</a></li>
+        <li><a href="https://www.airbank.cz/co-vas-nejvic-zajima/urokove-sazby-u-hypoteky/">Air Bank, úrokové sazby hypotéky</a> (jen kontrola, ceník se upravuje ručně)</li>
+      </ul>
+      <p id="bond-note"></p>
+      <ul class="status-list" id="status"></ul>
+    </section>
+
+    <footer class="site">
+      Naposledy aktualizováno: <time id="updated">—</time> (Evropa/Praha).
+      Data se ve všední dny stahují kolem 17:00 UTC. Když zdroj vypadne, zůstane poslední uložená hodnota.
+    </footer>
+  </div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
