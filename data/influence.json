@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-11-16T09:52:13.669260+00:00",
+  "computed_at": "2026-11-16T10:17:13.061182+00:00",
   "method": "Pearsonova korelace a OLS beta ze změn, ne z hladin. Denní a týdenní řady používají týdenní změny od ledna 2024, inflace měsíční změny. Okno je celé překrytí s řadou 3Y IRS, tedy zhruba poslední necelé tři roky. Silný vliv je |korelace| alespoň 0,45, střední od 0,25, jinak slabý. U měsíčních řad je jistota nižší. Přenos do sazby hypotéky je 62,5 % u kladného součtu (střed pásma 60–65 %) a 40 % u záporného.",
   "irs_approximate": true,
   "pass_through_up": 0.625,

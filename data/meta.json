@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-16T09:52:13.670387+00:00",
+  "updated_at": "2026-11-16T10:17:13.063293+00:00",
   "series": {
     "irs": {
       "ok": true,
@@ -7,7 +7,7 @@
       "error": null,
       "rows": 175,
       "last_date": "2026-11-16",
-      "last_value": "4.785",
+      "last_value": "4.7937",
       "source_label": "Patria, střed nákup/prodej",
       "source_url": "https://www.patria.cz/kurzy/historie/sazby.html",
       "auto": true,
@@ -65,7 +65,7 @@
       "source_url": "https://data.csu.gov.cz/opendata/sady/CEN0101E/distribuce/csv",
       "auto": true,
       "quality": "official",
-      "changed": true
+      "changed": false
     },
     "hicp_ea": {
       "ok": true,
@@ -117,7 +117,7 @@
       "source_url": "https://fred.stlouisfed.org/series/DEXUSEU",
       "auto": true,
       "quality": "official",
-      "changed": true
+      "changed": false
     },
     "ust": {
       "ok": true,
