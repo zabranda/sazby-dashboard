@@ -639,7 +639,9 @@ function renderOffset() {
   const rs = num(document.getElementById("rsav").value);
   const out = document.getElementById("offset-result");
   const inputs = document.getElementById("offset-inputs");
-  inputs.textContent = `Vstupy: L = ${loan == null ? "n/a" : new Intl.NumberFormat("cs-CZ").format(loan)} Kč, Δ = ${delta == null ? "n/a (neověřeno)" : delta + " p. b."}, r hypotéky = ${rm == null ? "n/a" : rm + " %"} z ručního přehledu RB k 16. 11. 2026, r spoření = ${rs == null ? "n/a" : rs + " %"} (výchozí Trinity Bank 4,28 %, ověřeno 16. 11. 2026). Daň vkladů 15 %.`;
+  const savingsLabel = document.getElementById("rsav").selectedOptions?.[0]?.textContent || (rs == null ? "n/a" : rs + " %");
+  const pp = (value) => value.toLocaleString("cs-CZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  inputs.textContent = `Vstupy: L = ${loan == null ? "n/a" : new Intl.NumberFormat("cs-CZ").format(loan)} Kč, Δ = ${delta == null ? "n/a" : pp(delta) + " p. b."}, r hypotéky = ${rm == null ? "n/a" : pp(rm) + " %"} s offsetem, r spoření = ${savingsLabel}. Daň vkladů 15 %.`;
   if (loan == null || delta == null || rm == null || rs == null) {
     out.textContent = "n/a";
     return;
@@ -673,7 +675,9 @@ function bind() {
   document.getElementById("show-5y").addEventListener("change", renderMain);
   document.getElementById("overlay").addEventListener("change", renderMain);
   ["loan", "delta", "rmort", "rsav"].forEach((id) => {
-    document.getElementById(id).addEventListener("input", renderOffset);
+    const field = document.getElementById(id);
+    field.addEventListener("input", renderOffset);
+    field.addEventListener("change", renderOffset);
   });
   window.addEventListener("resize", () => charts.forEach((chart) => chart.resize()));
 }

@@ -71,7 +71,7 @@ header.top {
 .cnb-outlook strong { color: var(--ink); font-weight: 650; }
 .offset-form { display: flex; flex-wrap: wrap; gap: 10px 16px; }
 .offset-form label { font-size: 0.9rem; color: var(--muted); }
-.offset-form input { display: block; margin-top: 4px; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: 9rem; background: var(--card); }
+.offset-form input, .offset-form select { display: block; margin-top: 4px; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: 11rem; background: var(--card); }
 .hint-inline { font-size: 0.75rem; }
 .offset-result { font-family: var(--serif); font-size: 1.35rem; margin: 12px 0 4px; }
 .weight-row { display: grid; grid-template-columns: minmax(140px, 1.3fr) minmax(80px, 2fr) 52px 110px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
