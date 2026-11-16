@@ -171,15 +171,12 @@ function renderTiles() {
   const week = change(irs, 7);
   const month = change(irs, 30);
   const air = inForce(state.air, last ? last.date : "9999-12-31");
-  const active = state.airActive;
   const spreadBp = last && air ? (air.value - last.value) * 100 : null;
   const fx = state.fx[state.fx.length - 1];
   const eurusd = (state.series.eur_usd || []).at(-1);
   document.getElementById("bank-tiles").innerHTML = latestBanks().map((row) => {
     const rate = num(row.rate_pct);
-    const airBank = /air bank/i.test(row.bank);
-    const sub = airBank && active != null ? `aktivní klienti ${pct(active)}` : esc(row.note || "");
-    return tile({ label: row.bank, value: rate == null ? "—" : pct(rate), sub });
+    return tile({ label: row.bank, value: rate == null ? "—" : pct(rate), sub: esc(row.note || "") });
   }).join("");
   const market = [
     { label: "3Y CZK IRS", value: last ? pct(last.value, 3) : "—", sub: `týden ${week == null ? "—" : `<span class="${cls(week)}">${signed(week * 100, " bp")}</span>`}<br>měsíc ${month == null ? "—" : `<span class="${cls(month)}">${signed(month * 100, " bp")}</span>`}` },
@@ -610,19 +607,6 @@ function renderStatus() {
   node.setAttribute("datetime", state.meta.updated_at || "");
 }
 
-function renderOutlook() {
-  const row = (state.outlook || []).find((item) => item.meeting_date === "2026-12-17") || (state.outlook || [])[0];
-  const node = document.getElementById("cnb-outlook");
-  if (!node) return;
-  if (!row) {
-    node.textContent = "n/a";
-    return;
-  }
-  const direction = ({ up: "↑ nahoru", down: "↓ dolů", flat: "→ beze změny" })[row.direction] || "n/a";
-  const bp = row.bp && row.bp !== "n/a" ? row.bp + " bp" : "n/a";
-  const repo = row.expected_repo && row.expected_repo !== "n/a" ? row.expected_repo + " %" : "n/a";
-  node.innerHTML = `<strong>${direction}</strong>, krok ${esc(bp)}, očekávané repo ${esc(repo)}<br>${esc(row.source || "")}<br>k ${esc((row.as_of || "").split("-").reverse().join(". "))}`;
-}
 function renderSavings() {
   const root = document.getElementById("savings-tiles");
   if (!root) return;
@@ -685,10 +669,10 @@ function bind() {
 async function main() {
   document.getElementById("chip-cnb").textContent = chip(daysUntil("2026-12-17"));
   document.getElementById("chip-feb").textContent = chip(daysUntil("2027-02-01"));
-  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText, outlookText, savingsText, changesText] = await Promise.all([
+  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText, savingsText, changesText] = await Promise.all([
     load("data/meta.json"), load("data/influence.json"), load("data/irs_3y.csv"), load("data/irs_1y.csv"),
     load("data/irs_5y.csv"), load("data/cnb_fx.csv"), load("data/airbank_3y.csv"), load("data/bank_rates.csv"),
-    load("data/cnb_outlook.csv"), load("data/savings_rates.csv"), load("data/airbank_changes.csv"),
+    load("data/savings_rates.csv"), load("data/airbank_changes.csv"),
   ]);
   state.meta = JSON.parse(metaText);
   state.influence = JSON.parse(influenceText);
@@ -698,10 +682,7 @@ async function main() {
   state.fx = parseCsv(fxText).map((row) => ({ date: row.date, eur: num(row.eur_czk), usd: num(row.usd_czk) })).filter((row) => row.eur && row.usd);
   const airRows = parseCsv(airText);
   state.air = airRows.map((row) => ({ date: row.date_effective, value: num(row.rate_pct) })).filter((row) => row.value != null);
-  const latestAir = airRows[airRows.length - 1] || {};
-  state.airActive = num(latestAir.active_rate_pct);
   state.banks = parseCsv(bankText);
-  state.outlook = parseCsv(outlookText);
   state.savings = parseCsv(savingsText);
   state.airChanges = parseCsv(changesText);
   const rb = state.banks.find((row) => /raiffeisen/i.test(row.bank));
@@ -727,7 +708,6 @@ async function main() {
     document.getElementById("irs-note").textContent =
       `Body do ${official.date.split("-").reverse().join(". ")} jsou přibližný odečet z grafu Patria (±3 bp). Od tohoto data je střed nákup/prodej stažený ze stránky.`;
   }
-  renderOutlook();
   renderTiles();
   renderSavings();
   renderOffset();

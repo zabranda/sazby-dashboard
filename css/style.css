@@ -67,8 +67,6 @@ header.top {
   color: var(--muted);
 }
 .cnb-line b { color: var(--ink); font-weight: 650; font-size: 0.95rem; }
-.cnb-outlook { margin-top: 8px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
-.cnb-outlook strong { color: var(--ink); font-weight: 650; }
 .offset-form { display: flex; flex-wrap: wrap; gap: 10px 16px; }
 .offset-form label { font-size: 0.9rem; color: var(--muted); }
 .offset-form input, .offset-form select { display: block; margin-top: 4px; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: 11rem; background: var(--card); }
