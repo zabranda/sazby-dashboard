@@ -20,7 +20,7 @@ const nf = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 2 });
 const nf1 = new Intl.NumberFormat("cs-CZ", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const nf4 = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 4 });
 const charts = [];
-const state = { range: "2R" };
+const state = { range: "2R", marketRange: "1R", marketCharts: {} };
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
@@ -145,6 +145,23 @@ function baseOption() {
   };
 }
 
+function fx3(value) {
+  return new Intl.NumberFormat("cs-CZ", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(value);
+}
+function latestBanks() {
+  const latest = new Map();
+  for (const row of state.banks) {
+    const prev = latest.get(row.bank);
+    if (!prev || (row.date_effective || "") > (prev.date_effective || "")) latest.set(row.bank, row);
+  }
+  const rows = [...latest.values()];
+  const rank = (bank) => (/raiffeisen/i.test(bank) ? 0 : /air bank/i.test(bank) ? 1 : 2);
+  rows.sort((a, b) => rank(a.bank) - rank(b.bank) || num(a.rate_pct) - num(b.rate_pct));
+  return rows;
+}
+function tile(card) {
+  return `<article class="tile ${card.tone || ""}"><div class="label">${esc(card.label)}</div><div class="value">${card.value}</div><div class="sub">${card.sub || ""}</div></article>`;
+}
 function renderTiles() {
   const irs = state.irs3;
   const last = irs[irs.length - 1];
@@ -153,25 +170,58 @@ function renderTiles() {
   const air = inForce(state.air, last ? last.date : "9999-12-31");
   const active = state.airActive;
   const spreadBp = last && air ? (air.value - last.value) * 100 : null;
-  const reserve = active != null ? state.rb - active : null;
-  let tone = "";
-  if (reserve != null) tone = reserve > 0.10 ? "tone-green" : reserve > 0 ? "tone-amber" : "tone-red";
   const fx = state.fx[state.fx.length - 1];
-  const cards = [
+  const eurusd = (state.series.eur_usd || []).at(-1);
+  document.getElementById("bank-tiles").innerHTML = latestBanks().map((row) => {
+    const rate = num(row.rate_pct);
+    const airBank = /air bank/i.test(row.bank);
+    const sub = airBank && active != null ? `aktivní klienti ${pct(active)}` : esc(row.note || "");
+    return tile({ label: row.bank, value: rate == null ? "—" : pct(rate), sub });
+  }).join("");
+  const market = [
     { label: "3Y CZK IRS", value: last ? pct(last.value, 3) : "—", sub: `týden ${week == null ? "—" : `<span class="${cls(week)}">${signed(week * 100, " bp")}</span>`}<br>měsíc ${month == null ? "—" : `<span class="${cls(month)}">${signed(month * 100, " bp")}</span>`}` },
-    { label: "Air Bank, 3 roky", value: air ? pct(air.value) : "—", sub: active != null ? `aktivní klienti ${pct(active)}` : "ceník bez slev" },
-    { label: "Spread ceník − IRS", value: spreadBp == null ? "—" : signed(spreadBp, " bp", 0), sub: "bazické body" },
-    { label: "Rezerva proti Raiffeisenbank", value: reserve == null ? "—" : signed(reserve, " p. b.", 2), sub: "5,45 − sazba aktivních klientů", tone },
-    { label: "EUR/CZK", value: fx ? new Intl.NumberFormat("cs-CZ", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(fx.eur) : "—", sub: fx ? fx.date.split("-").reverse().join(". ") : "" },
-    { label: "USD/CZK", value: fx ? new Intl.NumberFormat("cs-CZ", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(fx.usd) : "—", sub: "fixing ČNB" },
   ];
-  document.getElementById("tiles").innerHTML = cards.map((card) =>
-    `<article class="tile ${card.tone || ""}"><div class="label">${esc(card.label)}</div><div class="value">${card.value}</div><div class="sub">${card.sub}</div></article>`
-  ).join("");
+  if (fx) {
+    market.push({ label: "EUR/CZK", value: fx3(fx.eur), sub: fx.date.split("-").reverse().join(". ") });
+    market.push({ label: "USD/CZK", value: fx3(fx.usd), sub: "fixing ČNB" });
+  }
+  if (eurusd) market.push({ label: "EUR/USD", value: nf4.format(eurusd.value), sub: eurusd.date.split("-").reverse().join(". ") });
+  document.getElementById("market-tiles").innerHTML = market.map(tile).join("");
   const flowIrs = document.getElementById("flow-irs");
   const flowSpread = document.getElementById("flow-spread");
-  if (last) flowIrs.textContent = pct(last.value) + " ke dni " + last.date.split("-").reverse().join(". ");
-  if (spreadBp != null) flowSpread.textContent = `ceník ${pct(air.value)} = IRS + ${signed(spreadBp, " bp", 0)}`;
+  if (last) flowIrs.textContent = pct(last.value, 3) + " ke dni " + last.date.split("-").reverse().join(". ");
+  if (spreadBp != null) flowSpread.textContent = `ceník ${pct(air.value)}, spread ${signed(spreadBp, " bp", 0)}`;
+}
+function renderMarket() {
+  const root = document.getElementById("market-charts");
+  if (!window.echarts || !state.irs3.length) return;
+  const specs = [
+    { id: "irs", name: "3Y CZK IRS", points: state.irs3, color: "#173848" },
+    { id: "eur", name: "EUR/CZK", points: state.fx.map((point) => ({ date: point.date, value: point.eur })), color: "#0e6a60" },
+    { id: "usd", name: "USD/CZK", points: state.fx.map((point) => ({ date: point.date, value: point.usd })), color: "#9a6208" },
+    { id: "eurusd", name: "EUR/USD", points: state.series.eur_usd || [], color: "#b24a2c" },
+  ].filter((item) => item.points.length);
+  if (!root.dataset.ready) {
+    root.innerHTML = specs.map((item) => `<div class="market-cell"><h3>${esc(item.name)}</h3><div class="plot" id="mkt-${item.id}"></div></div>`).join("");
+    root.dataset.ready = "1";
+  }
+  const from = cutoff(state.irs3[state.irs3.length - 1].date, state.marketRange);
+  for (const item of specs) {
+    const el = document.getElementById("mkt-" + item.id);
+    if (!el) continue;
+    const points = item.points.filter((point) => point.date >= from);
+    const chart = state.marketCharts[item.id] || echarts.init(el);
+    state.marketCharts[item.id] = chart;
+    chart.setOption({
+      animation: false,
+      grid: { left: 52, right: 12, top: 12, bottom: 24 },
+      tooltip: { trigger: "axis" },
+      xAxis: { type: "time", axisLabel: { fontSize: 10 } },
+      yAxis: { type: "value", scale: true, axisLabel: { fontSize: 10, formatter: (value) => nf.format(value) } },
+      series: [line(item.name, points, { color: item.color, lineStyle: { width: 1.8 }, showSymbol: false })],
+    }, true);
+    if (!charts.includes(chart)) charts.push(chart);
+  }
 }
 
 function line(name, points, extra = {}) {
@@ -301,7 +351,6 @@ function driverMeta(id) {
 function renderInfluence() {
   const drivers = state.influence.drivers || [];
   const ranked = (state.influence.ranking || []).map((id) => driverMeta(id)).filter((item) => item.corr != null);
-  document.getElementById("method-note").textContent = state.influence.method || "";
   const el = document.getElementById("chart-rank");
   if (window.echarts && ranked.length) {
     const chart = state.rankChart || echarts.init(el);
@@ -372,24 +421,45 @@ function renderImplication() {
     <p class="warn">Součet není model: faktory se překrývají, historie IRS před živými daty je přibližná a do součtu vstupují jen řady, které nejsou starší než pár týdnů. U poklesu se počítá přenos 40 %, u růstu 62,5 %.</p>`;
 }
 
+function influenceShares() {
+  const items = (state.influence.drivers || []).filter((item) => item.corr != null && Number.isFinite(item.corr));
+  const raw = items.map((item) => Math.abs(item.corr));
+  const total = raw.reduce((sum, value) => sum + value, 0) || 1;
+  const exact = raw.map((value) => (value / total) * 100);
+  const floors = exact.map((value) => Math.floor(value));
+  let left = 100 - floors.reduce((sum, value) => sum + value, 0);
+  exact.map((value, index) => ({ index, frac: value - floors[index] }))
+    .sort((a, b) => b.frac - a.frac)
+    .slice(0, left)
+    .forEach((item) => { floors[item.index] += 1; });
+  const shares = {};
+  items.forEach((item, index) => {
+    shares[item.id] = { pct: floors[index], sign: item.corr >= 0 ? 1 : -1 };
+  });
+  return shares;
+}
 function renderDrivers() {
   const root = document.getElementById("drivers");
   const select = document.getElementById("overlay");
+  const shares = influenceShares();
   select.innerHTML = `<option value="">žádný</option>` + DRIVERS.filter((driver) => (state.series[driver.id] || []).length)
     .map((driver) => `<option value="${driver.id}">${esc(driver.title)}</option>`).join("");
   root.innerHTML = GROUPS.map((group) => {
-    const cards = DRIVERS.filter((driver) => driver.group === group).map((driver) => {
+    const cards = DRIVERS.filter((driver) => driver.group === group && (state.series[driver.id] || []).length).map((driver) => {
       const points = state.series[driver.id] || [];
       const last = points[points.length - 1];
       const delta = change(points, 30);
-      const stale = last && (Date.now() - new Date(last.date + "T00:00:00Z")) / 86400000 > (driver.unit === "pct" && !driver.step && points.length < 80 ? 60 : 20);
+      const share = shares[driver.id];
+      const shareHtml = share ? `<div class="share"><b class="${share.sign < 0 ? "down" : "up"}">${share.sign < 0 ? "−" : "+"} vliv ${share.pct} %</b><span class="share-track"><span class="share-fill ${share.sign < 0 ? "neg" : ""}" style="width:${share.pct}%"></span></span></div>` : "";
       return `<article class="mini">
-        <header><div><strong>${esc(driver.title)}</strong><div class="label">${last ? last.date.split("-").reverse().join(". ") : ""}${stale ? " · starší řada" : ""}</div></div>
-        <div class="num">${formatValue(last && last.value, driver.unit)} <span class="${cls(delta)}">${formatDelta(delta, driver.unit)}</span></div></header>
+        <header><div><strong>${esc(driver.title)}</strong><div class="label">${last.date.split("-").reverse().join(". ")}</div></div>
+        <div class="num">${formatValue(last.value, driver.unit)} <span class="${cls(delta)}">${formatDelta(delta, driver.unit)}</span></div></header>
+        ${shareHtml}
         <p>${esc(driver.explain)}</p>
-        ${points.length ? `<div class="plot" id="mini-${driver.id}"></div>` : `<div class="miss">${esc(state.missing[driver.id] || "Řada se nepodařila načíst.")}</div>`}
+        <div class="plot" id="mini-${driver.id}"></div>
       </article>`;
     }).join("");
+    if (!cards) return "";
     return `<section class="group"><h3><span></span>${esc(group)}</h3><div class="minis">${cards}</div></section>`;
   }).join("");
   if (!window.echarts) return;
@@ -452,20 +522,12 @@ function renderBanks() {
 
 function renderStatus() {
   const when = state.meta.updated_at ? new Date(state.meta.updated_at) : null;
-  document.getElementById("updated").textContent = when
+  const node = document.getElementById("updated");
+  if (!node) return;
+  node.textContent = when
     ? new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague", dateStyle: "medium", timeStyle: "short" }).format(when)
     : "—";
-  document.getElementById("updated").setAttribute("datetime", state.meta.updated_at || "");
-  const list = document.getElementById("status");
-  const series = state.meta.series || {};
-  list.innerHTML = Object.entries(series).map(([key, info]) => {
-    const bad = info.error && !info.rows;
-    return `<li class="${bad ? "bad" : ""}"><strong>${esc(key)}</strong> — ${esc(info.source_label || "")}${info.last_date ? ", poslední " + esc(info.last_date) + " = " + esc(info.last_value) : ""}${info.error ? ". " + esc(info.error) : ""}${info.scrape ? ". " + esc(info.scrape) : ""}</li>`;
-  }).join("");
-  const bond = series.cz_bond_3y;
-  document.getElementById("bond-note").textContent = bond && bond.error
-    ? bond.error
-    : "Výnos 3letého státního dluhopisu se bere z data/cz_bond_3y.csv, pokud soubor existuje.";
+  node.setAttribute("datetime", state.meta.updated_at || "");
 }
 
 function bind() {
@@ -476,6 +538,13 @@ function bind() {
     for (const item of document.querySelectorAll("#ranges button")) item.classList.toggle("active", item === button);
     renderMain();
     renderSpread();
+  });
+  document.getElementById("market-ranges").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    state.marketRange = button.dataset.range;
+    for (const item of document.querySelectorAll("#market-ranges button")) item.classList.toggle("active", item === button);
+    renderMarket();
   });
   document.getElementById("show-1y").addEventListener("change", renderMain);
   document.getElementById("show-5y").addEventListener("change", renderMain);
@@ -525,7 +594,7 @@ async function main() {
       `Body do ${official.date.split("-").reverse().join(". ")} jsou přibližný odečet z grafu Patria (±3 bp). Od tohoto data je střed nákup/prodej stažený ze stránky.`;
   }
   renderTiles();
-  renderImplication();
+  renderMarket();
   renderMain();
   renderSpread();
   renderInfluence();
@@ -537,5 +606,5 @@ async function main() {
 
 main().catch((error) => {
   console.error(error);
-  document.querySelector(".lede").insertAdjacentHTML("afterend", `<p class="warn">Data se nepodařilo načíst: ${esc(error.message)}</p>`);
+  document.querySelector("h1").insertAdjacentHTML("afterend", `<p class="warn">Data se nepodařilo načíst: ${esc(error.message)}</p>`);
 });
