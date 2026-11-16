@@ -20,12 +20,29 @@
         <div class="cnb-title">Zasedání ČNB</div>
         <div class="cnb-line"><b id="chip-cnb">—</b><span>17. 12. 2026</span></div>
         <div class="cnb-line"><b id="chip-feb">—</b><span>1. 2. 2027</span></div>
+        <div class="cnb-outlook" id="cnb-outlook"></div>
       </aside>
     </header>
 
     <section class="band" aria-label="Nabídka bank">
       <h2 class="row-title">Nabídka bank – fixní sazby</h2>
       <div class="tiles" id="bank-tiles"></div>
+    </section>
+    <section class="band" aria-label="Spořicí účty">
+      <h2 class="row-title">Spořicí účty</h2>
+      <div class="tiles" id="savings-tiles"></div>
+    </section>
+    <section class="panel" id="offset-panel">
+      <h2>Kdy se vyplatí offset u RB</h2>
+      <p class="hint">Přirážka Δ za offset u 3leté fixace Raiffeisenbank se z veřejného sazebníku nepodařila ověřit. Dokud ji nezadáte, výsledek je n/a.</p>
+      <div class="offset-form">
+        <label>Úvěr <input id="loan" type="number" min="0" step="100000" value="5000000"> Kč</label>
+        <label>Δ <input id="delta" type="number" step="0.01" placeholder="n/a"> p. b. <span class="hint-inline">neověřeno</span></label>
+        <label>Sazba hypotéky <input id="rmort" type="number" step="0.01" value="5.45"> %</label>
+        <label>Spořicí sazba <input id="rsav" type="number" step="0.01" value="4.28"> %</label>
+      </div>
+      <p id="offset-result" class="offset-result"></p>
+      <p class="hint" id="offset-inputs"></p>
     </section>
     <section class="band" aria-label="Tržní data">
       <h2 class="row-title">Tržní data</h2>
@@ -88,24 +105,8 @@
 
     <section class="panel">
       <h2>Jak silně který faktor hýbe 3Y IRS</h2>
-      <div id="chart-rank" class="chart bar" role="img" aria-label="Korelace faktorů s 3Y IRS"></div>
-      <div class="table-wrap">
-        <table id="rank-table">
-          <thead>
-            <tr>
-              <th>Faktor</th>
-              <th class="num">Korelace</th>
-              <th class="num">R²</th>
-              <th>Přepočet</th>
-              <th class="num">Změna za měsíc</th>
-              <th class="num">→ IRS</th>
-              <th>Verdikt</th>
-              <th>6M</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <div id="weight-list"></div>
+      <p class="hint" id="weight-total"></p>
     </section>
 
     <section class="panel">

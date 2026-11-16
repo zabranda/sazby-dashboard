@@ -1,5 +1,5 @@
-date_effective,bank,rate_pct,note
-2026-11-16,Air Bank,5.29,"Ceník 3leté fixace pro refinancování, standard bez slev. Aktivní klienti 5,19 % (−0,10 p. b.). Offset: Chytrá rezerva."
-2026-11-16,MONETA Money Bank,5.19,Ceník 3leté fixace
-2026-11-16,UniCredit Bank,5.39,Ceník 3leté fixace
-2026-11-16,Raiffeisenbank,5.45,S offsetem; benchmark pro srovnání
+date_effective,bank,rate_pct,note,source,source_url
+2026-11-16,Air Bank,5.29,"s Chytrou rezervou (offset), pro věrné klienty s pojištěním: 5,19 − 0,10 + 0,20 = 5,29","Sazebník Air Bank platný od 23. 10. 2026, ověřeno 16. 11. 2026. Refinancování 3 roky s pojištěním 5,19 %, bez pojištění 5,29 %. Věrnost je další sleva 0,10 p. b. Chytrá rezerva sazbu zvyšuje o 0,20 p. b.",https://www.airbank.cz/co-vas-nejvic-zajima/urokove-sazby-u-hypoteky/
+2026-11-16,MONETA Money Bank,5.19,bez offsetu,"Ruční přehled k 16. 11. 2026. Při této úpravě se sazebník banky znovu neověřoval.",
+2026-11-16,UniCredit Bank,5.39,bez offsetu,"Ruční přehled k 16. 11. 2026. Při této úpravě se sazebník banky znovu neověřoval.",
+2026-11-16,Raiffeisenbank,5.45,"neověřeno, zda je sazba s offsetem","Ruční přehled k 16. 11. 2026 uvádí 5,45 %. Veřejná stránka RB k hypotéce uvádí sazbu od 4,99 % bez rozpisu 3leté fixace s offsetem a bez něj. Přirážku Δ se nepodařilo ověřit.",https://www.rb.cz/osobni/hypoteky/hypoteka-na-bydleni

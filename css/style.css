@@ -67,6 +67,18 @@ header.top {
   color: var(--muted);
 }
 .cnb-line b { color: var(--ink); font-weight: 650; font-size: 0.95rem; }
+.cnb-outlook { margin-top: 8px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+.cnb-outlook strong { color: var(--ink); font-weight: 650; }
+.offset-form { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.offset-form label { font-size: 0.9rem; color: var(--muted); }
+.offset-form input { display: block; margin-top: 4px; font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: 9rem; background: var(--card); }
+.hint-inline { font-size: 0.75rem; }
+.offset-result { font-family: var(--serif); font-size: 1.35rem; margin: 12px 0 4px; }
+.weight-row { display: grid; grid-template-columns: minmax(140px, 1.3fr) minmax(80px, 2fr) 52px 110px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.weight-bar { height: 10px; background: #efe4d6; border-radius: 99px; overflow: hidden; }
+.weight-bar span { display: block; height: 100%; background: var(--navy); border-radius: 99px; }
+.weight-pct { font-variant-numeric: tabular-nums; font-weight: 650; text-align: right; }
+.weight-bp { font-variant-numeric: tabular-nums; text-align: right; }
 .row-title { font-size: 1.25rem; margin: 18px 0 8px; }
 .tiles {
   display: grid;
@@ -228,6 +240,8 @@ footer.site {
 }
 @media (max-width: 680px) {
   .tiles, .flow-sources { grid-template-columns: 1fr 1fr; }
+  .weight-row { grid-template-columns: 1fr auto; }
+  .weight-bar { grid-column: 1 / -1; }
   .minis { grid-template-columns: 1fr; }
   .chart { height: 320px; }
   .tile .value { font-size: 1.4rem; }

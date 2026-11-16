@@ -26,7 +26,10 @@ function esc(value) {
   return String(value ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 }
 function num(value) {
-  const parsed = Number(String(value).replace(",", "."));
+  if (value == null) return null;
+  const text = String(value).trim().replace(/\s/g, "").replace(",", ".");
+  if (text === "" || text.toLowerCase() === "n/a") return null;
+  const parsed = Number(text);
   return Number.isFinite(parsed) ? parsed : null;
 }
 function pct(value, digits = 2) {
@@ -348,44 +351,39 @@ function driverMeta(id) {
   return state.influence.drivers.find((item) => item.id === id) || {};
 }
 
+function fourWeekView() {
+  const shares = influenceShares();
+  const rows = Object.keys(shares).map((id) => {
+    const driver = DRIVERS.find((item) => item.id === id);
+    const meta = driverMeta(id);
+    const points = state.series[id] || [];
+    const lastPoint = points[points.length - 1];
+    const irsLast = state.irs3[state.irs3.length - 1];
+    const age = lastPoint && irsLast ? (new Date(irsLast.date + "T00:00:00Z") - new Date(lastPoint.date + "T00:00:00Z")) / 86400000 : 999;
+    const delta = age <= 35 ? change(points, 28) : null;
+    const contrib = delta == null || meta.beta == null ? null : meta.beta * delta * 100;
+    return { id, title: driver ? driver.title : id, weight: shares[id].pct, contrib };
+  }).sort((a, b) => b.weight - a.weight);
+  const weighted = rows.reduce((sum, row) => row.contrib == null ? sum : sum + (row.weight / 100) * row.contrib, 0);
+  const actual = change(state.irs3, 28);
+  return { rows, weighted, actualBp: actual == null ? null : actual * 100 };
+}
 function renderInfluence() {
-  const drivers = state.influence.drivers || [];
-  const ranked = (state.influence.ranking || []).map((id) => driverMeta(id)).filter((item) => item.corr != null);
-  const el = document.getElementById("chart-rank");
-  if (window.echarts && ranked.length) {
-    const chart = state.rankChart || echarts.init(el);
-    state.rankChart = chart;
-    const labels = ranked.map((item) => DRIVERS.find((driver) => driver.id === item.id)?.title || item.id).reverse();
-    const values = ranked.map((item) => item.corr).reverse();
-    chart.setOption({
-      ...baseOption(),
-      grid: { left: 170, right: 24, top: 10, bottom: 28 },
-      xAxis: { type: "value", min: -1, max: 1, axisLabel: { formatter: (v) => nf.format(v) } },
-      yAxis: { type: "category", data: labels },
-      series: [{
-        type: "bar",
-        data: values.map((value) => ({ value, itemStyle: { color: value >= 0 ? "#0e6a60" : "#b24a2c" } })),
-      }],
-    }, true);
-    if (!charts.includes(chart)) charts.push(chart);
-  }
-  const body = document.querySelector("#rank-table tbody");
-  const ordered = [...ranked, ...drivers.filter((item) => item.corr == null)];
-  body.innerHTML = ordered.map((item) => {
-    const title = DRIVERS.find((driver) => driver.id === item.id)?.title || item.id;
-    const unit = unitOf(item.id);
-    const fresh = item.fresh === false ? " · řada není čerstvá" : "";
-    return `<tr>
-      <td>${esc(title)}</td>
-      <td class="num">${item.corr == null ? "—" : nf.format(item.corr)}</td>
-      <td class="num">${item.r2 == null ? "—" : nf.format(item.r2)}</td>
-      <td>${item.impact_bp == null ? "—" : esc(item.impact_name) + " ~ " + signed(item.impact_bp, " bp")}</td>
-      <td class="num">${formatDelta(item.change_1m, unit)}</td>
-      <td class="num">${item.implied_irs_bp == null ? "—" : signed(item.implied_irs_bp, " bp")}</td>
-      <td>${esc(item.verdict || "—")}${esc(fresh)}<div class="warn">${esc(item.confidence || "")}</div></td>
-      <td>${spark(item.rolling)}</td>
-    </tr>`;
+  const view = fourWeekView();
+  const max = Math.max(...view.rows.map((row) => row.weight), 1);
+  document.getElementById("weight-list").innerHTML = view.rows.map((row) => {
+    const arrow = row.contrib == null ? "n/a" : row.contrib > 0 ? "↑" : row.contrib < 0 ? "↓" : "→";
+    const tone = row.contrib == null ? "" : row.contrib > 0 ? "up" : row.contrib < 0 ? "down" : "";
+    const bpText = row.contrib == null ? "n/a" : `${arrow} ${signed(row.contrib, " bp")}`;
+    return `<div class="weight-row">
+      <div class="weight-name">${esc(row.title)}</div>
+      <div class="weight-bar"><span style="width:${(row.weight / max) * 100}%"></span></div>
+      <div class="weight-pct">${row.weight} %</div>
+      <div class="weight-bp ${tone}">${bpText}</div>
+    </div>`;
   }).join("");
+  document.getElementById("weight-total").textContent =
+    `Vážený součet příspěvků za 4 týdny: ${signed(view.weighted, " bp")}. Skutečný pohyb 3Y IRS za 4 týdny: ${view.actualBp == null ? "n/a" : signed(view.actualBp, " bp")}. Váha je |korelace| vydělená součtem absolutních korelací. Příspěvek je beta × změna faktoru za 28 dní.`;
 }
 
 function spark(points) {
@@ -450,7 +448,13 @@ function renderDrivers() {
       const last = points[points.length - 1];
       const delta = change(points, 30);
       const share = shares[driver.id];
-      const shareHtml = share ? `<div class="share"><b class="${share.sign < 0 ? "down" : "up"}">${share.sign < 0 ? "−" : "+"} vliv ${share.pct} %</b><span class="share-track"><span class="share-fill ${share.sign < 0 ? "neg" : ""}" style="width:${share.pct}%"></span></span></div>` : "";
+      const irsLast = state.irs3[state.irs3.length - 1];
+      const age = irsLast ? (new Date(irsLast.date + "T00:00:00Z") - new Date(last.date + "T00:00:00Z")) / 86400000 : 999;
+      const delta4 = age <= 35 ? change(points, 28) : null;
+      const beta = driverMeta(driver.id).beta;
+      const contrib4 = delta4 == null || beta == null ? null : beta * delta4 * 100;
+      const arrow = contrib4 == null ? "" : contrib4 > 0 ? "↑ " : contrib4 < 0 ? "↓ " : "→ ";
+      const shareHtml = share ? `<div class="share"><b>${share.pct} %</b><span class="share-track"><span class="share-fill" style="width:${share.pct}%"></span></span><span class="${contrib4 == null ? "" : cls(contrib4)}">${contrib4 == null ? "n/a" : arrow + signed(contrib4, " bp")}</span></div>` : "";
       return `<article class="mini">
         <header><div><strong>${esc(driver.title)}</strong><div class="label">${last.date.split("-").reverse().join(". ")}</div></div>
         <div class="num">${formatValue(last.value, driver.unit)} <span class="${cls(delta)}">${formatDelta(delta, driver.unit)}</span></div></header>
@@ -530,6 +534,49 @@ function renderStatus() {
   node.setAttribute("datetime", state.meta.updated_at || "");
 }
 
+function renderOutlook() {
+  const row = (state.outlook || []).find((item) => item.meeting_date === "2026-12-17") || (state.outlook || [])[0];
+  const node = document.getElementById("cnb-outlook");
+  if (!node) return;
+  if (!row) {
+    node.textContent = "n/a";
+    return;
+  }
+  const direction = ({ up: "↑ nahoru", down: "↓ dolů", flat: "→ beze změny" })[row.direction] || "n/a";
+  const bp = row.bp && row.bp !== "n/a" ? row.bp + " bp" : "n/a";
+  const repo = row.expected_repo && row.expected_repo !== "n/a" ? row.expected_repo + " %" : "n/a";
+  node.innerHTML = `<strong>${direction}</strong>, krok ${esc(bp)}, očekávané repo ${esc(repo)}<br>${esc(row.source || "")}<br>k ${esc((row.as_of || "").split("-").reverse().join(". "))}`;
+}
+function renderSavings() {
+  const root = document.getElementById("savings-tiles");
+  if (!root) return;
+  root.innerHTML = (state.savings || []).map((row) => tile({
+    label: row.bank,
+    value: row.rate_pct && row.rate_pct !== "n/a" ? pct(num(row.rate_pct)) : "n/a",
+    sub: `${esc(row.conditions || "")}<br><span class="hint-inline">${esc((row.as_of || "").split("-").reverse().join(". "))} · ${esc(row.source_url || row.source || "")}</span>`,
+  })).join("") || `<article class="tile"><div class="value">n/a</div></article>`;
+}
+function renderOffset() {
+  const loan = num(document.getElementById("loan").value);
+  const delta = num(document.getElementById("delta").value);
+  const rm = num(document.getElementById("rmort").value);
+  const rs = num(document.getElementById("rsav").value);
+  const out = document.getElementById("offset-result");
+  const inputs = document.getElementById("offset-inputs");
+  inputs.textContent = `Vstupy: L = ${loan == null ? "n/a" : new Intl.NumberFormat("cs-CZ").format(loan)} Kč, Δ = ${delta == null ? "n/a (neověřeno)" : delta + " p. b."}, r hypotéky = ${rm == null ? "n/a" : rm + " %"} z ručního přehledu RB k 16. 11. 2026, r spoření = ${rs == null ? "n/a" : rs + " %"} (výchozí Trinity Bank 4,28 %, ověřeno 16. 11. 2026). Daň vkladů 15 %.`;
+  if (loan == null || delta == null || rm == null || rs == null) {
+    out.textContent = "n/a";
+    return;
+  }
+  const denom = rm - rs * 0.85;
+  if (denom <= 0) {
+    out.textContent = "n/a";
+    return;
+  }
+  const deposit = loan * delta / denom;
+  const share = deposit / loan * 100;
+  out.textContent = `${new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(deposit)} Kč, tedy ${nf.format(share)} % úvěru`;
+}
 function bind() {
   document.getElementById("ranges").addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -549,15 +596,19 @@ function bind() {
   document.getElementById("show-1y").addEventListener("change", renderMain);
   document.getElementById("show-5y").addEventListener("change", renderMain);
   document.getElementById("overlay").addEventListener("change", renderMain);
+  ["loan", "delta", "rmort", "rsav"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", renderOffset);
+  });
   window.addEventListener("resize", () => charts.forEach((chart) => chart.resize()));
 }
 
 async function main() {
   document.getElementById("chip-cnb").textContent = chip(daysUntil("2026-12-17"));
   document.getElementById("chip-feb").textContent = chip(daysUntil("2027-02-01"));
-  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText] = await Promise.all([
+  const [metaText, influenceText, irs3Text, irs1Text, irs5Text, fxText, airText, bankText, outlookText, savingsText] = await Promise.all([
     load("data/meta.json"), load("data/influence.json"), load("data/irs_3y.csv"), load("data/irs_1y.csv"),
     load("data/irs_5y.csv"), load("data/cnb_fx.csv"), load("data/airbank_3y.csv"), load("data/bank_rates.csv"),
+    load("data/cnb_outlook.csv"), load("data/savings_rates.csv"),
   ]);
   state.meta = JSON.parse(metaText);
   state.influence = JSON.parse(influenceText);
@@ -570,6 +621,8 @@ async function main() {
   const latestAir = airRows[airRows.length - 1] || {};
   state.airActive = num(latestAir.active_rate_pct);
   state.banks = parseCsv(bankText);
+  state.outlook = parseCsv(outlookText);
+  state.savings = parseCsv(savingsText);
   const rb = state.banks.find((row) => /raiffeisen/i.test(row.bank));
   state.rb = rb ? num(rb.rate_pct) : 5.45;
   state.series = {};
@@ -593,7 +646,10 @@ async function main() {
     document.getElementById("irs-note").textContent =
       `Body do ${official.date.split("-").reverse().join(". ")} jsou přibližný odečet z grafu Patria (±3 bp). Od tohoto data je střed nákup/prodej stažený ze stránky.`;
   }
+  renderOutlook();
   renderTiles();
+  renderSavings();
+  renderOffset();
   renderMarket();
   renderMain();
   renderSpread();
