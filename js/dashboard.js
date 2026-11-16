@@ -182,14 +182,14 @@ function renderTiles() {
     { label: "3Y CZK IRS", value: last ? pct(last.value, 3) : "—", sub: `týden ${week == null ? "—" : `<span class="${cls(week)}">${signed(week * 100, " bp")}</span>`}<br>měsíc ${month == null ? "—" : `<span class="${cls(month)}">${signed(month * 100, " bp")}</span>`}` },
   ];
   if (fx) {
-    market.push({ label: "EUR/CZK", value: fx3(fx.eur), sub: fx.date.split("-").reverse().join(". ") });
-    market.push({ label: "USD/CZK", value: fx3(fx.usd), sub: "fixing ČNB" });
+    market.push({ label: "EUR/CZK", value: fx3(fx.eur) });
+    market.push({ label: "USD/CZK", value: fx3(fx.usd) });
   }
-  if (eurusd) market.push({ label: "EUR/USD", value: nf4.format(eurusd.value), sub: eurusd.date.split("-").reverse().join(". ") });
+  if (eurusd) market.push({ label: "EUR/USD", value: nf4.format(eurusd.value) });
   document.getElementById("market-tiles").innerHTML = market.map(tile).join("");
   const flowIrs = document.getElementById("flow-irs");
   const flowSpread = document.getElementById("flow-spread");
-  if (last) flowIrs.textContent = pct(last.value, 3) + " ke dni " + last.date.split("-").reverse().join(". ");
+  if (last) flowIrs.textContent = pct(last.value, 3);
   if (spreadBp != null) flowSpread.textContent = `ceník ${pct(air.value)}, spread ${signed(spreadBp, " bp", 0)}`;
 }
 function renderMarket() {
@@ -347,16 +347,6 @@ function renderMain() {
     series.push(line(driver.title, points, { yAxisIndex: 1, color: "#5b4b8a", step: driver.step ? "end" : false, lineStyle: { type: "dotted", width: 2 } }));
     axes.push({ type: "value", scale: true, splitLine: { show: false }, axisLabel: { formatter: (v) => nf.format(v) } });
   }
-  const official = irs.filter((point) => point.quality === "official");
-  if (official.length) {
-    series.push({
-      name: "staženo z Patrie",
-      type: "scatter",
-      symbolSize: 9,
-      color: "#173848",
-      data: official.map((point) => [point.date, point.value]),
-    });
-  }
   const chart = state.mainChart || echarts.init(el);
   state.mainChart = chart;
   chart.setOption({
@@ -382,7 +372,6 @@ function renderAirbankEvents(analysis) {
     <td class="num">${event.lag == null ? "n/a" : event.lag + " dní" + (event.continuous ? "" : ", mimo medián")}</td>
     <td class="num">${event.irsAtChange ? pct(event.irsAtChange.value, 2) : "n/a"}</td>
     <td class="num">${event.margin == null ? "n/a" : signed(event.margin, " bp", 0)}</td>
-    <td><a href="${esc(event.source_url)}">${esc(event.source)}</a></td>
   </tr>`).join("");
   const marginGap = analysis.medianMargin != null && analysis.currentMargin != null ? analysis.currentMargin - analysis.medianMargin : null;
   summary.textContent = analysis.usable.length
@@ -529,7 +518,7 @@ function renderDrivers() {
       const arrow = contrib4 == null ? "" : contrib4 > 0 ? "↑ " : contrib4 < 0 ? "↓ " : "→ ";
       const shareHtml = share ? `<div class="share"><b>${share.pct} %</b><span class="share-track"><span class="share-fill" style="width:${share.pct}%"></span></span><span class="${contrib4 == null ? "" : cls(contrib4)}">${contrib4 == null ? "n/a" : arrow + signed(contrib4, " bp")}</span></div>` : "";
       return `<article class="mini">
-        <header><div><strong>${esc(driver.title)}</strong><div class="label">${last.date.split("-").reverse().join(". ")}</div></div>
+        <header><div><strong>${esc(driver.title)}</strong></div>
         <div class="num">${formatValue(last.value, driver.unit)} <span class="${cls(delta)}">${formatDelta(delta, driver.unit)}</span></div></header>
         ${shareHtml}
         <p>${esc(driver.explain)}</p>
@@ -613,31 +602,31 @@ function renderSavings() {
   root.innerHTML = (state.savings || []).map((row) => tile({
     label: row.bank,
     value: row.rate_pct && row.rate_pct !== "n/a" ? pct(num(row.rate_pct)) : "n/a",
-    sub: `${esc(row.conditions || "")}<br><span class="hint-inline">${esc((row.as_of || "").split("-").reverse().join(". "))} · ${esc(row.source_url || row.source || "")}</span>`,
+    sub: esc(row.conditions || ""),
   })).join("") || `<article class="tile"><div class="value">n/a</div></article>`;
 }
 function renderOffset() {
-  const loan = num(document.getElementById("loan").value);
-  const delta = num(document.getElementById("delta").value);
-  const rm = num(document.getElementById("rmort").value);
-  const rs = num(document.getElementById("rsav").value);
+  const loan = num(document.getElementById("loan").value) ?? 5000000;
+  const delta = num(document.getElementById("delta").value) ?? 0.1;
+  const rm = num(document.getElementById("rmort").value) ?? 5.45;
+  const rs = num(document.getElementById("rsav").value) ?? 4.28;
   const out = document.getElementById("offset-result");
   const inputs = document.getElementById("offset-inputs");
-  const savingsLabel = document.getElementById("rsav").selectedOptions?.[0]?.textContent || (rs == null ? "n/a" : rs + " %");
+  const netNode = document.getElementById("offset-net");
   const pp = (value) => value.toLocaleString("cs-CZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  inputs.textContent = `Vstupy: L = ${loan == null ? "n/a" : new Intl.NumberFormat("cs-CZ").format(loan)} Kč, Δ = ${delta == null ? "n/a" : pp(delta) + " p. b."}, r hypotéky = ${rm == null ? "n/a" : pp(rm) + " %"} s offsetem, r spoření = ${savingsLabel}. Daň vkladů 15 %.`;
-  if (loan == null || delta == null || rm == null || rs == null) {
-    out.textContent = "n/a";
-    return;
-  }
-  const denom = rm - rs * 0.85;
+  const net = Math.round(rs * 0.85 * 100) / 100;
+  const money = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 });
+  if (netNode) netNode.textContent = `Spořicí sazba ${pp(rs)} % × 0,85 (daň 15 %) = ${pp(net)} % čistého`;
+  const denom = rm - net;
   if (denom <= 0) {
-    out.textContent = "n/a";
+    out.textContent = "—";
+    inputs.textContent = `D = L · Δ / (r RB − r čistá) = ${money.format(loan)} · ${pp(delta)} / (${pp(rm)} − ${pp(net)})`;
     return;
   }
   const deposit = loan * delta / denom;
   const share = deposit / loan * 100;
-  out.textContent = `${new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(deposit)} Kč, tedy ${nf.format(share)} % úvěru`;
+  out.textContent = `${money.format(deposit)} Kč, tedy ${nf.format(share)} % úvěru`;
+  inputs.textContent = `D = L · Δ / (r RB − r čistá) = ${money.format(loan)} · ${pp(delta)} / (${pp(rm)} − ${pp(net)})`;
 }
 function bind() {
   document.getElementById("ranges").addEventListener("click", (event) => {
@@ -698,16 +687,9 @@ async function main() {
       if (!state.series[driver.id].length) state.missing[driver.id] = "V souboru zatím nejsou hodnoty.";
     } catch (error) {
       state.series[driver.id] = [];
-      state.missing[driver.id] = driver.id === "cz_bond_3y"
-        ? "Automatický zdroj bez registrace není. Řadu lze doplnit do data/cz_bond_3y.csv."
-        : "Soubor se nepodařilo načíst.";
+      state.missing[driver.id] = "Řadu se nepodařilo načíst.";
     }
   }));
-  const official = state.irs3.find((point) => point.quality === "official");
-  if (official) {
-    document.getElementById("irs-note").textContent =
-      `Body do ${official.date.split("-").reverse().join(". ")} jsou přibližný odečet z grafu Patria (±3 bp). Od tohoto data je střed nákup/prodej stažený ze stránky.`;
-  }
   renderTiles();
   renderSavings();
   renderOffset();

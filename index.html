@@ -33,11 +33,11 @@
     </section>
     <section class="panel" id="offset-panel">
       <h2>Kdy se vyplatí offset u RB</h2>
-      <p class="hint">Přirážka Δ za offset u 3leté fixace je +0,10 p. b. Sazba 5,45 % je s offsetem a už obsahuje slevu 0,10 p. b. za PENB a 0,10 p. b. za pojištění majetku UNIQA. Stejná sazba bez offsetu je 5,35 %. Bod zvratu vkladu je D = L · Δ / (r hypotéky − r spoření · 0,85).</p>
+      <p class="hint">Δ = 0,10 p. b., bez offsetu je sazba 5,35 %. Referenční sazba RB s offsetem je 5,45 % a už obsahuje slevu 0,10 p. b. za PENB a 0,10 p. b. za pojištění majetku UNIQA. D = L · Δ / (r RB − r čistá).</p>
       <div class="offset-form">
         <label>Úvěr <input id="loan" type="number" min="0" step="100000" value="5000000"> Kč</label>
-        <label>Δ <input id="delta" type="number" step="0.01" value="0.10"> p. b.</label>
-        <label>Sazba hypotéky <input id="rmort" type="number" step="0.01" value="5.45"> %</label>
+        <label>Δ <input id="delta" type="number" step="0.01" value="0.10"> p. b. <span class="hint-inline">5,35 % bez offsetu</span></label>
+        <label>Sazba RB s offsetem 5,45 % (referenční) <input id="rmort" type="number" step="0.01" value="5.45"> %</label>
         <label>Spořicí sazba
           <select id="rsav">
             <option value="4.28" selected>4,28 % Trinity</option>
@@ -45,6 +45,7 @@
           </select>
         </label>
       </div>
+      <p class="hint" id="offset-net"></p>
       <p id="offset-result" class="offset-result"></p>
       <p class="hint" id="offset-inputs"></p>
     </section>
@@ -73,7 +74,7 @@
           <div class="pill"><strong>Globální</strong><span>EUR/USD a ropa Brent</span></div>
         </div>
         <div class="flow-arrow">tyto faktory se skládají do</div>
-        <div class="flow-box"><strong>3Y CZK IRS</strong><span id="flow-irs">střed nákup/prodej z Patrie</span></div>
+        <div class="flow-box"><strong>3Y CZK IRS</strong><span id="flow-irs">—</span></div>
         <div class="flow-arrow">banka k němu přidá spread</div>
         <div class="flow-box"><strong>Air Bank, fixace 3 roky</strong><span id="flow-spread">ceník = IRS + spread</span></div>
       </section>
@@ -81,7 +82,6 @@
 
     <section class="panel">
       <h2>3Y CZK IRS a ceník Air Bank</h2>
-      <p class="hint" id="irs-note">Historie do první hodnoty označené jako Patria je přibližný odečet z grafu, tolerance asi ±3 bp.</p>
       <div class="toolbar">
         <div id="ranges" role="group" aria-label="Období">
           <button type="button" data-range="3M">3M</button>
@@ -112,7 +112,6 @@
               <th class="num">Prodleva</th>
               <th class="num">IRS při změně</th>
               <th class="num">Sazba − IRS</th>
-              <th>Zdroj</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -140,7 +139,6 @@
 
     <section class="panel">
       <h2>Ceníky 3leté fixace</h2>
-      <p class="hint">Ručně udržovaný soubor <code>data/bank_rates.csv</code>, seřazený od nejnižší sazby. Rozdíl je proti Raiffeisenbank.</p>
       <div class="table-wrap">
         <table id="banks">
           <thead>
@@ -159,7 +157,6 @@
 
     <footer class="site">
       Naposledy aktualizováno: <time id="updated">—</time> (Evropa/Praha).
-      Data se ve všední dny stahují kolem 17:00 UTC. Když zdroj vypadne, zůstane poslední uložená hodnota.
     </footer>
   </div>
   <script src="js/dashboard.js"></script>
