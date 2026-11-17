@@ -1,13 +1,13 @@
 {
-  "updated_at": "2026-11-16T10:17:13.063293+00:00",
+  "updated_at": "2026-11-17T00:34:32.590685+00:00",
   "series": {
     "irs": {
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 175,
-      "last_date": "2026-11-16",
-      "last_value": "4.7937",
+      "rows": 176,
+      "last_date": "2026-11-17",
+      "last_value": "4.7963",
       "source_label": "Patria, střed nákup/prodej",
       "source_url": "https://www.patria.cz/kurzy/historie/sazby.html",
       "auto": true,
@@ -19,14 +19,14 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 972,
-      "last_date": "2026-11-13",
-      "last_value": "24.425",
+      "rows": 973,
+      "last_date": "2026-11-16",
+      "last_value": "24.43",
       "source_label": "ČNB, denní fixing",
       "source_url": "https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/vybrane.txt",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "cnb_repo": {
       "ok": true,
@@ -45,14 +45,14 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 966,
-      "last_date": "2026-11-06",
-      "last_value": "4.1",
+      "rows": 967,
+      "last_date": "2026-11-09",
+      "last_value": "4.09",
       "source_label": "ČNB, PRIBOR 3M",
       "source_url": "https://www.cnb.cz/cs/financni-trhy/penezni-trh/pribor/fixing-urokovych-sazeb-na-mezibankovnim-trhu-depozit-pribor/rok.txt?year=2026",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "cz_cpi": {
       "ok": true,
@@ -84,53 +84,53 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 987,
-      "last_date": "2026-11-12",
-      "last_value": "3.075142",
+      "rows": 988,
+      "last_date": "2026-11-13",
+      "last_value": "3.071805",
       "source_label": "ECB, 2Y spot sazba AAA výnosové křivky eurozóny",
       "source_url": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "ecb_deposit": {
       "ok": true,
       "refreshed": true,
       "error": null,
       "rows": 22,
-      "last_date": "2026-11-13",
+      "last_date": "2026-11-16",
       "last_value": "2.5",
       "source_label": "FRED ECBDFR, depozitní sazba ECB",
       "source_url": "https://fred.stlouisfed.org/series/ECBDFR",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "eurusd": {
       "ok": true,
       "refreshed": true,
       "error": null,
       "rows": 969,
-      "last_date": "2026-11-13",
-      "last_value": "1.1052",
+      "last_date": "2026-11-16",
+      "last_value": "1.1014",
       "source_label": "FRED DEXUSEU, USD za 1 EUR; dny po posledním FRED doplněny z ECB",
       "source_url": "https://fred.stlouisfed.org/series/DEXUSEU",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "ust": {
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 966,
-      "last_date": "2026-11-12",
-      "last_value": "4.86",
+      "rows": 967,
+      "last_date": "2026-11-13",
+      "last_value": "4.88",
       "source_label": "FRED DGS2 a DGS10",
       "source_url": "https://fred.stlouisfed.org/series/DGS2",
       "auto": true,
       "quality": "official",
-      "changed": false,
+      "changed": true,
       "also": "ust_10y"
     },
     "us_cpi": {
@@ -151,13 +151,13 @@
       "refreshed": true,
       "error": null,
       "rows": 20,
-      "last_date": "2026-11-15",
+      "last_date": "2026-11-16",
       "last_value": "4",
       "source_label": "FRED DFEDTARU",
       "source_url": "https://fred.stlouisfed.org/series/DFEDTARU",
       "auto": true,
       "quality": "official",
-      "changed": false
+      "changed": true
     },
     "brent": {
       "ok": true,
