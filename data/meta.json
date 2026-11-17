@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-17T00:34:32.590685+00:00",
+  "updated_at": "2026-11-17T23:43:10.626324+00:00",
   "series": {
     "irs": {
       "ok": true,
@@ -7,7 +7,7 @@
       "error": null,
       "rows": 176,
       "last_date": "2026-11-17",
-      "last_value": "4.7963",
+      "last_value": "2.4025",
       "source_label": "Patria, střed nákup/prodej",
       "source_url": "https://www.patria.cz/kurzy/historie/sazby.html",
       "auto": true,
@@ -26,7 +26,7 @@
       "source_url": "https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/vybrane.txt",
       "auto": true,
       "quality": "official",
-      "changed": true
+      "changed": false
     },
     "cnb_repo": {
       "ok": true,
@@ -52,7 +52,7 @@
       "source_url": "https://www.cnb.cz/cs/financni-trhy/penezni-trh/pribor/fixing-urokovych-sazeb-na-mezibankovnim-trhu-depozit-pribor/rok.txt?year=2026",
       "auto": true,
       "quality": "official",
-      "changed": true
+      "changed": false
     },
     "cz_cpi": {
       "ok": true,
@@ -84,9 +84,9 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 988,
-      "last_date": "2026-11-13",
-      "last_value": "3.071805",
+      "rows": 989,
+      "last_date": "2026-11-16",
+      "last_value": "3.109075",
       "source_label": "ECB, 2Y spot sazba AAA výnosové křivky eurozóny",
       "source_url": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y",
       "auto": true,
@@ -98,7 +98,7 @@
       "refreshed": true,
       "error": null,
       "rows": 22,
-      "last_date": "2026-11-16",
+      "last_date": "2026-11-17",
       "last_value": "2.5",
       "source_label": "FRED ECBDFR, depozitní sazba ECB",
       "source_url": "https://fred.stlouisfed.org/series/ECBDFR",
@@ -110,9 +110,9 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 969,
-      "last_date": "2026-11-16",
-      "last_value": "1.1014",
+      "rows": 970,
+      "last_date": "2026-11-17",
+      "last_value": "1.0989",
       "source_label": "FRED DEXUSEU, USD za 1 EUR; dny po posledním FRED doplněny z ECB",
       "source_url": "https://fred.stlouisfed.org/series/DEXUSEU",
       "auto": true,
@@ -123,9 +123,9 @@
       "ok": true,
       "refreshed": true,
       "error": null,
-      "rows": 967,
-      "last_date": "2026-11-13",
-      "last_value": "4.88",
+      "rows": 968,
+      "last_date": "2026-11-16",
+      "last_value": "4.83",
       "source_label": "FRED DGS2 a DGS10",
       "source_url": "https://fred.stlouisfed.org/series/DGS2",
       "auto": true,
@@ -151,7 +151,7 @@
       "refreshed": true,
       "error": null,
       "rows": 20,
-      "last_date": "2026-11-16",
+      "last_date": "2026-11-17",
       "last_value": "4",
       "source_label": "FRED DFEDTARU",
       "source_url": "https://fred.stlouisfed.org/series/DFEDTARU",
