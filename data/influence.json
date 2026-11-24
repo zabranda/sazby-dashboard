@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-11-20T22:52:35.878068+00:00",
+  "computed_at": "2026-11-24T03:07:06.466173+00:00",
   "method": "Pearsonova korelace a OLS beta ze změn, ne z hladin. Denní a týdenní řady používají týdenní změny od ledna 2024, inflace měsíční změny. Okno je celé překrytí s řadou 3Y IRS, tedy zhruba poslední necelé tři roky. Silný vliv je |korelace| alespoň 0,45, střední od 0,25, jinak slabý. U měsíčních řad je jistota nižší. Přenos do sazby hypotéky je 62,5 % u kladného součtu (střed pásma 60–65 %) a 40 % u záporného.",
   "irs_approximate": true,
   "pass_through_up": 0.625,
@@ -11,22 +11,18 @@
       "impact_name": "+10 bp",
       "kind": "step",
       "last_date": "2026-11-06",
-      "fresh": true,
-      "n": 149,
+      "fresh": false,
+      "n": 150,
       "corr": -0.086,
       "r2": 0.007,
-      "beta": -0.1047,
-      "impact_bp": -1.0,
+      "beta": -0.1052,
+      "impact_bp": -1.1,
       "verdict": "slabý",
       "confidence": "týdenní změny",
       "sign": -1,
       "change_1m": 0.25,
       "implied_irs_bp": -2.6,
       "rolling": [
-        {
-          "date": "2025-07-11",
-          "corr": 0.001
-        },
         {
           "date": "2025-07-18",
           "corr": 0.02
@@ -182,6 +178,10 @@
         {
           "date": "2026-11-20",
           "corr": -0.391
+        },
+        {
+          "date": "2026-11-24",
+          "corr": -0.424
         }
       ]
     },
@@ -221,23 +221,19 @@
       "impact_per": 0.1,
       "impact_name": "+0,10 Kč",
       "kind": "daily",
-      "last_date": "2026-11-20",
+      "last_date": "2026-11-23",
       "fresh": true,
-      "n": 149,
+      "n": 150,
       "corr": -0.072,
       "r2": 0.005,
-      "beta": -0.0902,
+      "beta": -0.0899,
       "impact_bp": -0.9,
       "verdict": "slabý",
       "confidence": "týdenní změny",
       "sign": -1,
-      "change_1m": 0.21,
-      "implied_irs_bp": -1.9,
+      "change_1m": 0.12,
+      "implied_irs_bp": -1.1,
       "rolling": [
-        {
-          "date": "2026-02-21",
-          "corr": -0.453
-        },
         {
           "date": "2026-02-28",
           "corr": -0.427
@@ -393,6 +389,10 @@
         {
           "date": "2026-11-20",
           "corr": -0.25
+        },
+        {
+          "date": "2026-11-24",
+          "corr": -0.259
         }
       ]
     },
@@ -401,7 +401,7 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "daily",
-      "last_date": "2026-11-12",
+      "last_date": "2026-11-13",
       "fresh": true,
       "n": 148,
       "corr": 0.03,
@@ -581,12 +581,12 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "step",
-      "last_date": "2026-11-20",
+      "last_date": "2026-11-23",
       "fresh": true,
-      "n": 149,
+      "n": 150,
       "corr": -0.08,
       "r2": 0.006,
-      "beta": -0.1467,
+      "beta": -0.1473,
       "impact_bp": -1.5,
       "verdict": "slabý",
       "confidence": "týdenní změny",
@@ -594,10 +594,6 @@
       "change_1m": 0.0,
       "implied_irs_bp": -0.0,
       "rolling": [
-        {
-          "date": "2025-08-15",
-          "corr": -0.056
-        },
         {
           "date": "2025-08-22",
           "corr": -0.062
@@ -753,6 +749,10 @@
         {
           "date": "2026-11-20",
           "corr": -0.201
+        },
+        {
+          "date": "2026-11-24",
+          "corr": -0.225
         }
       ]
     },
@@ -780,18 +780,18 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "daily",
-      "last_date": "2026-11-19",
+      "last_date": "2026-11-20",
       "fresh": true,
       "n": 149,
-      "corr": 0.479,
-      "r2": 0.229,
-      "beta": 0.6395,
-      "impact_bp": 6.4,
+      "corr": 0.486,
+      "r2": 0.236,
+      "beta": 0.6489,
+      "impact_bp": 6.5,
       "verdict": "silný",
       "confidence": "týdenní změny",
       "sign": 1,
-      "change_1m": 0.097,
-      "implied_irs_bp": 6.2,
+      "change_1m": 0.0021,
+      "implied_irs_bp": 0.1,
       "rolling": [
         {
           "date": "2026-02-21",
@@ -951,7 +951,7 @@
         },
         {
           "date": "2026-11-20",
-          "corr": 0.675
+          "corr": 0.701
         }
       ]
     },
@@ -960,12 +960,12 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "step",
-      "last_date": "2026-11-20",
+      "last_date": "2026-11-23",
       "fresh": true,
-      "n": 149,
-      "corr": -0.066,
+      "n": 150,
+      "corr": -0.067,
       "r2": 0.004,
-      "beta": -0.1221,
+      "beta": -0.1227,
       "impact_bp": -1.2,
       "verdict": "slabý",
       "confidence": "týdenní změny",
@@ -973,10 +973,6 @@
       "change_1m": 0.0,
       "implied_irs_bp": -0.0,
       "rolling": [
-        {
-          "date": "2025-11-15",
-          "corr": -0.135
-        },
         {
           "date": "2025-11-22",
           "corr": -0.129
@@ -1132,6 +1128,10 @@
         {
           "date": "2026-11-20",
           "corr": -0.153
+        },
+        {
+          "date": "2026-11-24",
+          "corr": -0.17
         }
       ]
     },
@@ -1159,18 +1159,18 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "daily",
-      "last_date": "2026-11-19",
+      "last_date": "2026-11-20",
       "fresh": true,
       "n": 149,
-      "corr": 0.281,
-      "r2": 0.079,
-      "beta": 0.2712,
+      "corr": 0.285,
+      "r2": 0.081,
+      "beta": 0.272,
       "impact_bp": 2.7,
       "verdict": "střední",
       "confidence": "týdenní změny",
       "sign": 1,
-      "change_1m": -0.03,
-      "implied_irs_bp": -0.8,
+      "change_1m": -0.18,
+      "implied_irs_bp": -4.9,
       "rolling": [
         {
           "date": "2026-02-21",
@@ -1330,7 +1330,7 @@
         },
         {
           "date": "2026-11-20",
-          "corr": 0.562
+          "corr": 0.559
         }
       ]
     },
@@ -1339,18 +1339,18 @@
       "impact_per": 0.1,
       "impact_name": "+10 bp",
       "kind": "daily",
-      "last_date": "2026-11-19",
+      "last_date": "2026-11-20",
       "fresh": true,
       "n": 149,
-      "corr": 0.317,
-      "r2": 0.1,
-      "beta": 0.3213,
+      "corr": 0.32,
+      "r2": 0.102,
+      "beta": 0.3214,
       "impact_bp": 3.2,
       "verdict": "střední",
       "confidence": "týdenní změny",
       "sign": 1,
-      "change_1m": -0.08,
-      "implied_irs_bp": -2.6,
+      "change_1m": -0.21,
+      "implied_irs_bp": -6.7,
       "rolling": [
         {
           "date": "2026-02-21",
@@ -1510,7 +1510,7 @@
         },
         {
           "date": "2026-11-20",
-          "corr": 0.514
+          "corr": 0.512
         }
       ]
     },
@@ -1519,23 +1519,19 @@
       "impact_per": 0.01,
       "impact_name": "+0,01",
       "kind": "daily",
-      "last_date": "2026-11-20",
+      "last_date": "2026-11-23",
       "fresh": true,
-      "n": 149,
-      "corr": -0.268,
-      "r2": 0.072,
-      "beta": -3.1737,
+      "n": 150,
+      "corr": -0.267,
+      "r2": 0.071,
+      "beta": -3.1508,
       "impact_bp": -3.2,
       "verdict": "střední",
       "confidence": "týdenní změny",
       "sign": -1,
-      "change_1m": -0.0229,
-      "implied_irs_bp": 7.3,
+      "change_1m": -0.026,
+      "implied_irs_bp": 8.2,
       "rolling": [
-        {
-          "date": "2026-02-21",
-          "corr": -0.103
-        },
         {
           "date": "2026-02-28",
           "corr": -0.089
@@ -1690,7 +1686,11 @@
         },
         {
           "date": "2026-11-20",
-          "corr": -0.227
+          "corr": -0.223
+        },
+        {
+          "date": "2026-11-24",
+          "corr": -0.15
         }
       ]
     },
@@ -1870,7 +1870,7 @@
         },
         {
           "date": "2026-11-20",
-          "corr": 0.457
+          "corr": 0.456
         }
       ]
     }
@@ -1898,7 +1898,7 @@
       "ust_10y",
       "ust_2y"
     ],
-    "sum_irs_bp": -21.6,
-    "sum_bank_bp": -8.6
+    "sum_irs_bp": -35.9,
+    "sum_bank_bp": -14.4
   }
 }

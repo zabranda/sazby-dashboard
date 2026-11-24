@@ -967,8 +967,9 @@ date,value,quality,source
 2026-11-10,1.1153,official,fred-DEXUSEU
 2026-11-12,1.1056,official,fred-DEXUSEU
 2026-11-13,1.1034,official,fred-DEXUSEU
-2026-11-16,1.1014,official,ecb-eurusd
-2026-11-17,1.0989,official,ecb-eurusd
-2026-11-18,1.0968,official,ecb-eurusd
-2026-11-19,1.0992,official,ecb-eurusd
-2026-11-20,1.099,official,ecb-eurusd
+2026-11-16,1.1004,official,fred-DEXUSEU
+2026-11-17,1.1016,official,fred-DEXUSEU
+2026-11-18,1.0968,official,fred-DEXUSEU
+2026-11-19,1.0981,official,fred-DEXUSEU
+2026-11-20,1.0981,official,fred-DEXUSEU
+2026-11-23,1.0939,official,ecb-eurusd
